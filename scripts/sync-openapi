@@ -1,0 +1,29 @@
+#!/usr/bin/env node
+const { writeFile } = require('node:fs/promises');
+const { join } = require('node:path');
+
+async function main() {
+  const files = await Promise.all(['openapi.json', 'openapi.yaml'].map(async (name) => {
+    const response = await fetch('https://bisnis.bisadagang.com/' + name, {
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!response.ok) throw new Error(name + ': HTTP ' + response.status);
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (name === 'openapi.json' && !JSON.parse(bytes.toString('utf8')).openapi) {
+      throw new Error(name + ': expected an OpenAPI document');
+    }
+    if (name === 'openapi.yaml' && !/^openapi:/m.test(bytes.toString('utf8'))) {
+      throw new Error(name + ': expected an OpenAPI document');
+    }
+    return { name, bytes };
+  }));
+
+  for (const { name, bytes } of files) {
+    await writeFile(join(__dirname, '..', 'openapi', name), bytes);
+  }
+}
+
+main().catch((error) => {
+  console.error(error.message);
+  process.exitCode = 1;
+});

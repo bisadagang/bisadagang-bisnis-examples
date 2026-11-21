@@ -1,0 +1,3 @@
+/openapi/openapi.json -text
+/openapi/openapi.yaml -text
+/scripts/sync-openapi text eol=lf
