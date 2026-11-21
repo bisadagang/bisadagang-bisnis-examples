@@ -76,7 +76,7 @@ python3 webhook-receiver.py
 
 ## Ulangi transaksi dengan referensi yang sama
 
-`create-transaction` membuat `ref_id` unik jika argumen ketiga dikosongkan dan mencetaknya sebelum mengirim request. Simpan referensi beserta input transaksi. Jika koneksi terputus atau hasilnya belum pasti, cek status dengan referensi itu atau ulangi lewat contoh bahasa yang sama. Berikan kembali kode produk, nomor tujuan, dan `ref_id` yang sama sebagai argumen. Contoh akan memakai kembali `Idempotency-Key` dan byte body yang sama serta membuat timestamp, nonce, dan signature baru.
+`create-transaction` membuat `ref_id` unik jika Anda menjalankannya tanpa argumen ketiga. Contoh mencetak referensi itu sebelum mengirim request. Simpan referensi beserta input transaksi. Jika koneksi terputus atau hasilnya belum pasti, cek status dengan referensi itu atau ulangi lewat contoh bahasa yang sama. Berikan kembali kode produk, nomor tujuan, dan `ref_id` yang sama sebagai argumen. Contoh akan memakai kembali `Idempotency-Key` dan byte body yang sama serta membuat timestamp, nonce, dan signature baru.
 
 `Idempotency-Key` berlaku 24 jam. Tunggu beberapa detik sebelum mengulang jika API mengembalikan `REQUEST_IN_PROGRESS`. Untuk `REF_ID_CONFLICT`, cek transaksi yang sudah tercatat dengan referensi tersebut. Buat `ref_id` baru hanya untuk transaksi baru.
 
