@@ -13,6 +13,7 @@ def main():
         try:
             result = request("GET", "/transactions/" + quote(ref_id, safe=""))
             print_response(result)
+            # message is display-only; use status for integration decisions.
             status = result["data"]["status"]
             if status in ("success", "failed"):
                 return

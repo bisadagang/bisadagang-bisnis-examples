@@ -93,6 +93,10 @@ python3 webhook-receiver.py
 
 `sign-request` memakai vektor signature publik dan bisa dijalankan sebelum mengisi kredensial. `list-products` menerima kategori opsional, misalnya `Pulsa`. Respons API membawa `request_id` untuk membantu penelusuran error.
 
+Respons produk menyediakan `sample_size` (24 jam), `sample_size_30d`, dan `sample_size_90d`: masing-masing bernilai `rendah` (<50 transaksi final), `sedang` (50–499), `tinggi` (≥500), atau `null` jika belum dihitung. Jumlah sukses dan gagal per produk tidak lagi tersedia. Endpoint `/h2h/v1/summary` tetap menyediakan hitungan agregatnya.
+
+Untuk transaksi, gunakan `status` (`pending`, `success`, atau `failed`) untuk menentukan tindakan; `message` hanya teks untuk ditampilkan dan tidak boleh menjadi dasar percabangan. Pada inquiry tagihan, `details` dapat bernilai `null`; jika tersedia, field opsionalnya adalah `lembar_tagihan`, `tarif`, `daya`, `jumlah_peserta`, dan `detail`. Setiap item `detail` hanya dapat memuat `periode`, `nilai_tagihan`, `admin`, `denda`, `biaya_lain`, `meter_awal`, dan `meter_akhir`, semuanya opsional.
+
 ## Ulangi transaksi dengan referensi yang sama
 
 `create-transaction` membuat `ref_id` unik jika Anda menjalankannya tanpa argumen ketiga. Contoh mencetak referensi itu sebelum mengirim request. Simpan referensi beserta input transaksi. Jika koneksi terputus atau hasilnya belum pasti, cek status dengan referensi itu atau ulangi lewat contoh bahasa yang sama. Berikan kembali kode produk, nomor tujuan, dan `ref_id` yang sama sebagai argumen. Contoh akan memakai kembali `Idempotency-Key` dan byte body yang sama serta membuat timestamp, nonce, dan signature baru.

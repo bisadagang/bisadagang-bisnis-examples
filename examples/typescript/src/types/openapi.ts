@@ -428,16 +428,16 @@ export interface components {
             active: boolean;
             success_rate: number | null;
             speed_seconds: number | null;
-            success_count: number | null;
-            failed_count: number | null;
+            /** @description Transaksi final: rendah <50, sedang 50–499, tinggi ≥500; null jika belum dihitung. */
+            sample_size: ("rendah" | "sedang" | "tinggi") | null;
             success_rate_30d: number | null;
             speed_seconds_30d: number | null;
-            success_count_30d: number | null;
-            failed_count_30d: number | null;
+            /** @description Transaksi final: rendah <50, sedang 50–499, tinggi ≥500; null jika belum dihitung. */
+            sample_size_30d: ("rendah" | "sedang" | "tinggi") | null;
             success_rate_90d: number | null;
             speed_seconds_90d: number | null;
-            success_count_90d: number | null;
-            failed_count_90d: number | null;
+            /** @description Transaksi final: rendah <50, sedang 50–499, tinggi ≥500; null jika belum dihitung. */
+            sample_size_90d: ("rendah" | "sedang" | "tinggi") | null;
         };
         CreateTransaction: {
             /** @description Kode produk. Backend melakukan trim dan mengubah huruf menjadi kapital. */
@@ -461,7 +461,8 @@ export interface components {
             /** @enum {string} */
             status: "pending" | "success" | "failed";
             sn: string | null;
-            message: string | null;
+            /** @description Hanya untuk tampilan; gunakan status untuk logika integrasi. Kemungkinan pesan: Transaksi berhasil.; Transaksi sedang diproses.; Transaksi tidak dapat diproses. Dana dikembalikan.; Batas transaksi untuk tujuan ini telah tercapai.; Nomor tujuan tidak valid. Periksa dan coba lagi.; Produk sedang tidak tersedia. Silakan coba lagi nanti.; Transaksi tidak dapat diproses. */
+            message: string;
             /** @enum {string} */
             product_type: "prepaid" | "postpaid";
             /** Format: date-time */
@@ -488,7 +489,8 @@ export interface components {
             /** @enum {string} */
             status: "pending" | "success" | "failed";
             sn: string | null;
-            message: string | null;
+            /** @description Hanya untuk tampilan; gunakan status untuk logika integrasi. Kemungkinan pesan: Transaksi berhasil.; Transaksi sedang diproses.; Transaksi tidak dapat diproses. Dana dikembalikan.; Batas transaksi untuk tujuan ini telah tercapai.; Nomor tujuan tidak valid. Periksa dan coba lagi.; Produk sedang tidak tersedia. Silakan coba lagi nanti.; Transaksi tidak dapat diproses. */
+            message: string;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -540,8 +542,21 @@ export interface components {
             commission: number;
             /** @description Total tagihan dikurangi komisi. */
             price: number;
-            /** @description Rincian dari penyedia. Struktur dan tipe dapat berbeda antar produk. */
-            details: unknown;
+            details: {
+                lembar_tagihan?: number;
+                tarif?: string;
+                daya?: number | string;
+                jumlah_peserta?: number | string;
+                detail?: {
+                    periode?: number | string;
+                    nilai_tagihan?: number | string;
+                    admin?: number | string;
+                    denda?: number | string;
+                    biaya_lain?: number | string;
+                    meter_awal?: number | string;
+                    meter_akhir?: number | string;
+                }[];
+            } | null;
             /** Format: date-time */
             expires_at: string;
         };
@@ -1937,7 +1952,8 @@ export interface operations {
                         /** @enum {string} */
                         status: "pending" | "success" | "failed";
                         sn: string | null;
-                        message: string | null;
+                        /** @description Hanya untuk tampilan; gunakan status untuk logika integrasi. Kemungkinan pesan: Transaksi berhasil.; Transaksi sedang diproses.; Transaksi tidak dapat diproses. Dana dikembalikan.; Batas transaksi untuk tujuan ini telah tercapai.; Nomor tujuan tidak valid. Periksa dan coba lagi.; Produk sedang tidak tersedia. Silakan coba lagi nanti.; Transaksi tidak dapat diproses. */
+                        message: string;
                     };
                 };
             };
