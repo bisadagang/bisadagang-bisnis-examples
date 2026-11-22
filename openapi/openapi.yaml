@@ -38,7 +38,9 @@ info:
 
     1. Tulis method HTTP dalam huruf besar.
 
-    2. Ambil path dan query string persis seperti dikirim, termasuk encoding dan urutan query.
+    2. Ambil path lengkap termasuk /h2h/v1, misalnya /h2h/v1/transactions, dan query string persis
+    seperti dikirim, termasuk encoding dan urutan query. Path OpenAPI relatif terhadap URL server,
+    tetapi signature memakai path lengkap.
 
     3. Gunakan timestamp dan nonce yang sama dengan isi header.
 
@@ -67,89 +69,63 @@ tags:
   - name: Komplain
   - name: Webhook
 paths:
-  /balance:
+  /transactions:
     get:
-      operationId: getBalance
+      operationId: listTransactions
       tags:
-        - Saldo dan produk
-      summary: Cek saldo
+        - Transaksi
+      summary: Riwayat transaksi
       description: >-
-        Ambil saldo dalam rupiah untuk environment API key. Batas default 120 request per menit per
-        Mitra Bisnis dan environment.
+        Hanya transaksi berbayar milik Mitra Bisnis dan environment API key. Tanda tangani path
+        beserta query persis seperti dikirim. Kedua endpoint berbagi batas tetap 30 request per
+        menit per Mitra Bisnis di semua key dan environment. Urut terbaru berdasarkan waktu lalu ID
+        menurun. Gunakan cursor dengan filter yang sama; next_cursor null pada halaman terakhir.
       externalDocs:
-        url: https://bisnis.bisadagang.com/docs/api/saldo
-      responses:
-        '200':
-          description: Request berhasil.
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/RateLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/RateLimitRemaining'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    const: true
-                  data:
-                    $ref: '#/components/schemas/Balance'
-                  request_id:
-                    anyOf:
-                      - type: string
-                        pattern: ^[0-9a-f]{10}$
-                      - type: 'null'
-                required:
-                  - success
-                  - data
-                  - request_id
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '415':
-          $ref: '#/components/responses/Error415'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '500':
-          $ref: '#/components/responses/Error500'
-        '503':
-          $ref: '#/components/responses/Error503'
-  /products:
-    get:
-      operationId: listProducts
-      tags:
-        - Saldo dan produk
-      summary: Daftar harga dan produk
-      description: >-
-        Ambil katalog dan harga akun, termasuk produk yang sedang gangguan. Pilihan produk mengikuti
-        environment API key. Batas default 120 request per menit per Mitra Bisnis dan environment.
-      externalDocs:
-        url: https://bisnis.bisadagang.com/docs/api/produk
+        url: https://bisnis.bisadagang.com/docs/api/transaksi#riwayat
       parameters:
-        - name: category
+        - name: from
           in: query
           schema:
             type: string
-            maxLength: 100
-          description: Filter kategori. Huruf besar dan kecil diperlakukan sama.
+            format: date
+          description: Tanggal awal WIB inklusif. Default enam hari sebelum to.
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+          description: >-
+            Tanggal akhir WIB inklusif. Default hari ini. Rentang maksimal 92 hari kalender; retensi
+            dua tahun berlaku.
         - name: status
           in: query
           schema:
             type: string
             enum:
-              - normal
-              - gangguan
-          description: Filter status produk.
-        - name: semua
+              - pending
+              - success
+              - failed
+          description: Filter status.
+        - name: product_code
           in: query
           schema:
-            type: boolean
-            default: false
-          description: true menampilkan semua produk yang bisa dipilih, termasuk yang belum aktif.
+            type: string
+            pattern: ^\s*[A-Za-z0-9]{1,20}\s*$
+          description: Kode produk; trim dan ubah ke huruf besar.
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Jumlah per halaman.
+        - name: cursor
+          in: query
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9_-]{1,100}$
+          description: next_cursor dari halaman sebelumnya.
       responses:
         '200':
           description: Request berhasil.
@@ -166,7 +142,7 @@ paths:
                   success:
                     const: true
                   data:
-                    $ref: '#/components/schemas/Products'
+                    $ref: '#/components/schemas/TransactionHistory'
                   request_id:
                     anyOf:
                       - type: string
@@ -190,7 +166,6 @@ paths:
           $ref: '#/components/responses/Error500'
         '503':
           $ref: '#/components/responses/Error503'
-  /transactions:
     post:
       operationId: createTransaction
       tags:
@@ -381,6 +356,208 @@ paths:
                   - success
                   - error
                   - request_id
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /summary:
+    get:
+      operationId: getSummary
+      tags:
+        - Transaksi
+      summary: Ringkasan transaksi
+      description: >-
+        Hanya transaksi berbayar milik Mitra Bisnis dan environment API key. Tanda tangani path
+        beserta query persis seperti dikirim. Kedua endpoint berbagi batas tetap 30 request per
+        menit per Mitra Bisnis di semua key dan environment. success_rate adalah persentase sukses
+        dari transaksi final, dibulatkan satu desimal atau null jika tidak ada transaksi final.
+        success_amount adalah jumlah harga transaksi sukses dalam rupiah. Breakdown hanya berisi
+        kelompok dengan data, terurut berdasarkan tanggal atau kode produk.
+      externalDocs:
+        url: https://bisnis.bisadagang.com/docs/api/transaksi#ringkasan-transaksi
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Tanggal awal WIB inklusif. Default enam hari sebelum to.
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+          description: >-
+            Tanggal akhir WIB inklusif. Default hari ini. Rentang maksimal 92 hari kalender; retensi
+            dua tahun berlaku.
+        - name: group_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - day
+              - product
+            default: day
+          description: Kelompokkan berdasarkan tanggal WIB atau produk.
+      responses:
+        '200':
+          description: Request berhasil.
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/TransactionSummary'
+                  request_id:
+                    anyOf:
+                      - type: string
+                        pattern: ^[0-9a-f]{10}$
+                      - type: 'null'
+                required:
+                  - success
+                  - data
+                  - request_id
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '415':
+          $ref: '#/components/responses/Error415'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /balance:
+    get:
+      operationId: getBalance
+      tags:
+        - Saldo dan produk
+      summary: Cek saldo
+      description: >-
+        Ambil saldo dalam rupiah untuk environment API key. Batas default 120 request per menit per
+        Mitra Bisnis dan environment.
+      externalDocs:
+        url: https://bisnis.bisadagang.com/docs/api/saldo
+      responses:
+        '200':
+          description: Request berhasil.
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Balance'
+                  request_id:
+                    anyOf:
+                      - type: string
+                        pattern: ^[0-9a-f]{10}$
+                      - type: 'null'
+                required:
+                  - success
+                  - data
+                  - request_id
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '415':
+          $ref: '#/components/responses/Error415'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /products:
+    get:
+      operationId: listProducts
+      tags:
+        - Saldo dan produk
+      summary: Daftar harga dan produk
+      description: >-
+        Ambil katalog dan harga akun, termasuk produk yang sedang gangguan. Pilihan produk mengikuti
+        environment API key. Batas default 120 request per menit per Mitra Bisnis dan environment.
+      externalDocs:
+        url: https://bisnis.bisadagang.com/docs/api/produk
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            maxLength: 100
+          description: Filter kategori. Huruf besar dan kecil diperlakukan sama.
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - normal
+              - gangguan
+          description: Filter status produk.
+        - name: semua
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: true menampilkan semua produk yang bisa dipilih, termasuk yang belum aktif.
+      responses:
+        '200':
+          description: Request berhasil.
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Products'
+                  request_id:
+                    anyOf:
+                      - type: string
+                        pattern: ^[0-9a-f]{10}$
+                      - type: 'null'
+                required:
+                  - success
+                  - data
+                  - request_id
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '415':
+          $ref: '#/components/responses/Error415'
         '429':
           $ref: '#/components/responses/Error429'
         '500':
@@ -2725,6 +2902,136 @@ components:
         - message
         - product_type
         - created_at
+    ReportTransaction:
+      type: object
+      properties:
+        ref_id:
+          type: string
+        transaction_id:
+          anyOf:
+            - type: string
+            - type: 'null'
+        product_code:
+          type: string
+          pattern: ^[A-Z0-9]{1,20}$
+        product_name:
+          type: string
+        customer_no:
+          type: string
+        price:
+          type: integer
+        status:
+          type: string
+          enum:
+            - pending
+            - success
+            - failed
+        sn:
+          anyOf:
+            - type: string
+            - type: 'null'
+        message:
+          anyOf:
+            - type: string
+            - type: 'null'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - ref_id
+        - transaction_id
+        - product_code
+        - product_name
+        - customer_no
+        - price
+        - status
+        - sn
+        - message
+        - created_at
+        - updated_at
+    TransactionHistory:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportTransaction'
+        next_cursor:
+          anyOf:
+            - type: string
+            - type: 'null'
+      required:
+        - transactions
+        - next_cursor
+    SummaryTotals:
+      type: object
+      properties:
+        count:
+          type: integer
+        success_count:
+          type: integer
+        failed_count:
+          type: integer
+        pending_count:
+          type: integer
+        success_rate:
+          anyOf:
+            - type: number
+            - type: 'null'
+        success_amount:
+          type: integer
+      required:
+        - count
+        - success_count
+        - failed_count
+        - pending_count
+        - success_rate
+        - success_amount
+    SummaryBucket:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        count:
+          type: integer
+        success_count:
+          type: integer
+        failed_count:
+          type: integer
+        success_amount:
+          type: integer
+      required:
+        - key
+        - label
+        - count
+        - success_count
+        - failed_count
+        - success_amount
+    TransactionSummary:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        totals:
+          $ref: '#/components/schemas/SummaryTotals'
+        breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/SummaryBucket'
+      required:
+        - from
+        - to
+        - totals
+        - breakdown
     ProductDestination:
       type: object
       properties:
