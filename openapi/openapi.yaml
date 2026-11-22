@@ -2638,19 +2638,19 @@ components:
           type: string
           pattern: ^[A-Za-z0-9._-]{1,50}$
         max_price:
-          anyOf:
-            - type: integer
-              minimum: 1
-              maximum: 100000000
-            - type: 'null'
-          description: Harga maksimum yang bersedia dibayar, dalam rupiah.
+          type: integer
+          minimum: 1
+          maximum: 100000000
+          description: >-
+            Opsional. Harga maksimum dalam rupiah; hilangkan field jika tidak digunakan. Jangan
+            kirim null.
         amount:
-          anyOf:
-            - type: integer
-              minimum: 1
-              maximum: 100000000
-            - type: 'null'
-          description: Wajib untuk produk nominal bebas. Batas aktual mengikuti produk.
+          type: integer
+          minimum: 1
+          maximum: 100000000
+          description: >-
+            Opsional untuk request; wajib untuk produk nominal bebas dengan batas sesuai produk.
+            Untuk produk nominal tetap, hilangkan field. Jangan kirim null.
         account_check_id:
           anyOf:
             - type: string
