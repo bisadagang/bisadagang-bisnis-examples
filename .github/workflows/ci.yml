@@ -40,6 +40,21 @@ jobs:
           python -m py_compile examples/python/*.py
           python examples/python/sign-request.py
 
+  typescript:
+    name: TypeScript checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.18.0'
+      - run: npm ci --prefix examples/typescript
+      - run: npm run --prefix examples/typescript typecheck
+      - run: node examples/typescript/sign-request.ts
+      - run: npm run --prefix examples/typescript generate:types
+      - run: git diff --exit-code -- examples/typescript/src/types/openapi.ts
+
   openapi:
     name: Compare with live OpenAPI
     runs-on: ubuntu-latest
@@ -49,5 +64,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
+      - run: npm ci --prefix examples/typescript
       - run: node scripts/sync-openapi
-      - run: git diff --exit-code -- openapi/openapi.json openapi/openapi.yaml
+      - run: git diff --exit-code -- openapi/openapi.json openapi/openapi.yaml examples/typescript/src/types/openapi.ts

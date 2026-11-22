@@ -38,6 +38,25 @@ node check-transaction-status.mjs REF_ID
 node webhook-receiver.mjs
 ```
 
+### TypeScript · Node.js 22.18+
+
+Node.js menjalankan berkas `.ts` langsung dengan menghapus anotasi tipe saat runtime. Contoh ini tidak memerlukan instalasi paket untuk dijalankan.
+
+```bash
+cd examples/typescript
+cp .env.example .env
+```
+
+```bash
+set -a; . ./.env; set +a
+node sign-request.ts
+node check-balance.ts
+node list-products.ts
+node create-transaction.ts TSEL10 081200000003
+node check-transaction-status.ts REF_ID
+node webhook-receiver.ts
+```
+
 ### PHP · PHP 8.1+ dan ext-curl
 
 ```bash
@@ -92,4 +111,6 @@ Folder inbox contoh memakai hard link untuk menyimpan satu berkas per `event_id`
 
 ## Spesifikasi OpenAPI
 
-Salinan spesifikasi tersedia dalam [JSON](openapi/openapi.json) dan [YAML](openapi/openapi.yaml). Untuk mengunduh ulang kedua berkas dari Bisadagang, jalankan `node scripts/sync-openapi` dari root repositori.
+Salinan spesifikasi tersedia dalam [JSON](openapi/openapi.json) dan [YAML](openapi/openapi.yaml). Pasang dependensi pengembangan dengan `npm ci --prefix examples/typescript` dari root repositori, lalu jalankan `node scripts/sync-openapi` untuk mengunduh ulang kedua berkas dari Bisadagang dan memperbarui tipe TypeScript.
+
+Untuk membuat ulang tipe dari salinan JSON lokal, jalankan `npm run --prefix examples/typescript generate:types`. Periksa tipe dengan `npm run --prefix examples/typescript typecheck`.

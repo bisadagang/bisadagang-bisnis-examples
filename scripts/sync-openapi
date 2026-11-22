@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+const { execSync } = require('node:child_process');
 const { writeFile } = require('node:fs/promises');
 const { join } = require('node:path');
 
@@ -21,6 +22,10 @@ async function main() {
   for (const { name, bytes } of files) {
     await writeFile(join(__dirname, '..', 'openapi', name), bytes);
   }
+  execSync('npm run generate:types', {
+    cwd: join(__dirname, '..', 'examples', 'typescript'),
+    stdio: 'inherit',
+  });
 }
 
 main().catch((error) => {
