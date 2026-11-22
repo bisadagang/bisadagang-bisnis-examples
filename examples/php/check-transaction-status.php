@@ -11,6 +11,7 @@ run(function () use ($argv): void {
         try {
             $result = request('GET', '/transactions/' . rawurlencode($refId));
             printResponse($result);
+            // message is display-only; use status for integration decisions.
             $status = $result['data']['status'];
             if (in_array($status, ['success', 'failed'], true)) {
                 return;

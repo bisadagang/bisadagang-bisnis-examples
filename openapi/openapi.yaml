@@ -1684,9 +1684,13 @@ webhooks:
                         - type: string
                         - type: 'null'
                     message:
-                      anyOf:
-                        - type: string
-                        - type: 'null'
+                      type: string
+                      description: >-
+                        Hanya untuk tampilan; gunakan status untuk logika integrasi. Kemungkinan
+                        pesan: Transaksi berhasil.; Transaksi sedang diproses.; Transaksi tidak
+                        dapat diproses. Dana dikembalikan.; Batas transaksi untuk tujuan ini telah
+                        tercapai.; Nomor tujuan tidak valid. Periksa dan coba lagi.; Produk sedang
+                        tidak tersedia. Silakan coba lagi nanti.; Transaksi tidak dapat diproses.
                   required:
                     - transaction_id
                     - ref_id
@@ -2730,14 +2734,15 @@ components:
           anyOf:
             - type: number
             - type: 'null'
-        success_count:
+        sample_size:
           anyOf:
-            - type: integer
+            - type: string
+              enum:
+                - rendah
+                - sedang
+                - tinggi
             - type: 'null'
-        failed_count:
-          anyOf:
-            - type: integer
-            - type: 'null'
+          description: 'Transaksi final: rendah <50, sedang 50–499, tinggi ≥500; null jika belum dihitung.'
         success_rate_30d:
           anyOf:
             - type: number
@@ -2748,14 +2753,15 @@ components:
           anyOf:
             - type: number
             - type: 'null'
-        success_count_30d:
+        sample_size_30d:
           anyOf:
-            - type: integer
+            - type: string
+              enum:
+                - rendah
+                - sedang
+                - tinggi
             - type: 'null'
-        failed_count_30d:
-          anyOf:
-            - type: integer
-            - type: 'null'
+          description: 'Transaksi final: rendah <50, sedang 50–499, tinggi ≥500; null jika belum dihitung.'
         success_rate_90d:
           anyOf:
             - type: number
@@ -2766,14 +2772,15 @@ components:
           anyOf:
             - type: number
             - type: 'null'
-        success_count_90d:
+        sample_size_90d:
           anyOf:
-            - type: integer
+            - type: string
+              enum:
+                - rendah
+                - sedang
+                - tinggi
             - type: 'null'
-        failed_count_90d:
-          anyOf:
-            - type: integer
-            - type: 'null'
+          description: 'Transaksi final: rendah <50, sedang 50–499, tinggi ≥500; null jika belum dihitung.'
       required:
         - code
         - product_name
@@ -2790,16 +2797,13 @@ components:
         - active
         - success_rate
         - speed_seconds
-        - success_count
-        - failed_count
+        - sample_size
         - success_rate_30d
         - speed_seconds_30d
-        - success_count_30d
-        - failed_count_30d
+        - sample_size_30d
         - success_rate_90d
         - speed_seconds_90d
-        - success_count_90d
-        - failed_count_90d
+        - sample_size_90d
     CreateTransaction:
       type: object
       properties:
@@ -2867,9 +2871,13 @@ components:
             - type: string
             - type: 'null'
         message:
-          anyOf:
-            - type: string
-            - type: 'null'
+          type: string
+          description: >-
+            Hanya untuk tampilan; gunakan status untuk logika integrasi. Kemungkinan pesan:
+            Transaksi berhasil.; Transaksi sedang diproses.; Transaksi tidak dapat diproses. Dana
+            dikembalikan.; Batas transaksi untuk tujuan ini telah tercapai.; Nomor tujuan tidak
+            valid. Periksa dan coba lagi.; Produk sedang tidak tersedia. Silakan coba lagi nanti.;
+            Transaksi tidak dapat diproses.
         product_type:
           type: string
           enum:
@@ -2931,9 +2939,13 @@ components:
             - type: string
             - type: 'null'
         message:
-          anyOf:
-            - type: string
-            - type: 'null'
+          type: string
+          description: >-
+            Hanya untuk tampilan; gunakan status untuk logika integrasi. Kemungkinan pesan:
+            Transaksi berhasil.; Transaksi sedang diproses.; Transaksi tidak dapat diproses. Dana
+            dikembalikan.; Batas transaksi untuk tujuan ini telah tercapai.; Nomor tujuan tidak
+            valid. Periksa dan coba lagi.; Produk sedang tidak tersedia. Silakan coba lagi nanti.;
+            Transaksi tidak dapat diproses.
         created_at:
           type: string
           format: date-time
@@ -3073,7 +3085,59 @@ components:
           type: number
           description: Total tagihan dikurangi komisi.
         details:
-          description: Rincian dari penyedia. Struktur dan tipe dapat berbeda antar produk.
+          anyOf:
+            - type: object
+              properties:
+                lembar_tagihan:
+                  type: integer
+                tarif:
+                  type: string
+                daya:
+                  anyOf:
+                    - type: integer
+                    - type: string
+                jumlah_peserta:
+                  anyOf:
+                    - type: integer
+                    - type: string
+                detail:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      periode:
+                        anyOf:
+                          - type: integer
+                          - type: string
+                      nilai_tagihan:
+                        anyOf:
+                          - type: integer
+                          - type: string
+                      admin:
+                        anyOf:
+                          - type: integer
+                          - type: string
+                      denda:
+                        anyOf:
+                          - type: integer
+                          - type: string
+                      biaya_lain:
+                        anyOf:
+                          - type: integer
+                          - type: string
+                      meter_awal:
+                        anyOf:
+                          - type: integer
+                          - type: string
+                      meter_akhir:
+                        anyOf:
+                          - type: integer
+                          - type: string
+                    required: []
+                    additionalProperties: false
+              required: []
+              additionalProperties: false
+            - type: 'null'
         expires_at:
           type: string
           format: date-time

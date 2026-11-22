@@ -9,6 +9,7 @@ await run(async () => {
     try {
       const result = await request('GET', '/transactions/' + encodeURIComponent(ref));
       console.log(JSON.stringify(result, null, 2));
+      // message is display-only; use status for integration decisions.
       if (['success', 'failed'].includes(result.data.status)) return;
       if (result.data.status !== 'pending') throw new Error('Unexpected transaction status');
     } catch (error) {
