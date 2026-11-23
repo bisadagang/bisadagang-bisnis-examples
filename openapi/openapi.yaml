@@ -2734,15 +2734,6 @@ components:
           anyOf:
             - type: number
             - type: 'null'
-        sample_size:
-          anyOf:
-            - type: string
-              enum:
-                - rendah
-                - sedang
-                - tinggi
-            - type: 'null'
-          description: 'Transaksi final: rendah <50, sedang 50–499, tinggi ≥500; null jika belum dihitung.'
         success_rate_30d:
           anyOf:
             - type: number
@@ -2753,15 +2744,6 @@ components:
           anyOf:
             - type: number
             - type: 'null'
-        sample_size_30d:
-          anyOf:
-            - type: string
-              enum:
-                - rendah
-                - sedang
-                - tinggi
-            - type: 'null'
-          description: 'Transaksi final: rendah <50, sedang 50–499, tinggi ≥500; null jika belum dihitung.'
         success_rate_90d:
           anyOf:
             - type: number
@@ -2772,15 +2754,6 @@ components:
           anyOf:
             - type: number
             - type: 'null'
-        sample_size_90d:
-          anyOf:
-            - type: string
-              enum:
-                - rendah
-                - sedang
-                - tinggi
-            - type: 'null'
-          description: 'Transaksi final: rendah <50, sedang 50–499, tinggi ≥500; null jika belum dihitung.'
       required:
         - code
         - product_name
@@ -2797,13 +2770,10 @@ components:
         - active
         - success_rate
         - speed_seconds
-        - sample_size
         - success_rate_30d
         - speed_seconds_30d
-        - sample_size_30d
         - success_rate_90d
         - speed_seconds_90d
-        - sample_size_90d
     CreateTransaction:
       type: object
       properties:
