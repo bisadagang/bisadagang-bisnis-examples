@@ -9,9 +9,11 @@ async function main() {
       signal: AbortSignal.timeout(30_000),
     });
     if (!response.ok) throw new Error(name + ': HTTP ' + response.status);
-    const bytes = Buffer.from(await response.arrayBuffer());
-    if (name === 'openapi.json' && !JSON.parse(bytes.toString('utf8')).openapi) {
-      throw new Error(name + ': expected an OpenAPI document');
+    let bytes = Buffer.from(await response.arrayBuffer());
+    if (name === 'openapi.json') {
+      const document = JSON.parse(bytes.toString('utf8'));
+      if (!document.openapi) throw new Error(name + ': expected an OpenAPI document');
+      bytes = Buffer.from(JSON.stringify(document, null, 2) + '\n', 'utf8');
     }
     if (name === 'openapi.yaml' && !/^openapi:/m.test(bytes.toString('utf8'))) {
       throw new Error(name + ': expected an OpenAPI document');
